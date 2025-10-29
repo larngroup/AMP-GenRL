@@ -123,16 +123,28 @@ def argparser():
         help='Batch size')
 
     parser.add_argument(
-        '--max_strlen',
+        '--max_strlen_pt',
         type=int,
-        default=1000,
+        default=200,
+        help='Maximum string length')
+    
+    parser.add_argument(
+        '--max_strlen_ft',
+        type=int,
+        default=200,
         help='Maximum string length')
     
     parser.add_argument(
         '--n_generate',
         type=int,
-        default=5,
+        default=250,
         help='Number of proteins to generate')
+    
+    parser.add_argument(
+        '--save_peptides',
+        type=bool,
+        default=False,
+        help='Save best sampled peptides')
 
     parser.add_argument(
         '--checkpoint_path',

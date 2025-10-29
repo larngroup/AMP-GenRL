@@ -12,6 +12,7 @@ from model.argument_parser import logging,argparser
 from dataloader.dataloader import DataLoader
 
 # External
+import torch
 import tensorflow as tf
 import warnings
 import time
@@ -40,10 +41,7 @@ def run_train_model(FLAGS):
     
  	# Initialize the Transformer class
     transformer_model = Transformer(FLAGS)
-    
-    # Initialize Optimization class
-    optimization_rl = Optimization(FLAGS)
-    
+        
     if FLAGS.option == 'pre_train':
     
         print('\nLoading pre_training data...')
@@ -64,7 +62,7 @@ def run_train_model(FLAGS):
         
     elif FLAGS.option == 'fine_tune':
         
-        print('\nLoading pre_training data...')
+        print('\nLoading fine-tuning data...')
         ft_dataset = DataLoader().load_sequences(FLAGS,'finetuning')
         
         print('\nPre-processing data...')
@@ -100,14 +98,19 @@ def run_train_model(FLAGS):
         transformer_model.properties_evaluation(sample_pretraining_proteins,sample_finetuned_proteins,pt_sequences,ft_sequences)
     
     elif FLAGS.option == 'optimization':
+       
+        optimization_rl = Optimization(FLAGS)
         
-        optimization_rl.optimization_loop()
+        print('Optimizing with RL...')
+        # optimization_rl.optimization_loop()
         
-        print('TO BE DONE')
         
-    elif FLAGS.option == 'test_evaluation':
-         print('TO dddd  ')
-         DataLoader.test_evaluation()
+        # if FLAGS.save_peptides:
+        # optimization_rl.compare_progression()
+        # optimization_rl.save_best_peptides()
+        optimization_rl.combine_all_peptides()
+    
+    
 
     
     
@@ -181,14 +184,17 @@ def run():
     """Selects how to run the model: train best approach (train) or identify optimal 
     configuration using the grid-search strategy (validation) 
     """
-    
+
     physical_devices = tf.config.list_physical_devices('GPU')
     try:
         tf.config.experimental.set_memory_growth(physical_devices[0], True)
+        
     except:
+        print('Bad')
         # Invalid device or cannot modify virtual devices once initialized.
         pass
-
+    
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     FLAGS = argparser()
     FLAGS.log_dir = os.getcwd() + '/logs/' + time.strftime("d_%m_%y_%H_%M", time.gmtime())+"/"
     FLAGS.checkpoint_path = os.getcwd() + '/checkpoints/' + time.strftime("d_%m_%y_%H_%M", time.gmtime())+"/"
@@ -200,7 +206,7 @@ def run():
    
     logging(str(FLAGS), FLAGS)
 
-    if FLAGS.option == 'pre_train' or FLAGS.option == 'fine_tune' or FLAGS.option == 'evaluation' or FLAGS.option == 'optimization' or FLAGS.option == 'test_evaluation':
+    if FLAGS.option == 'pre_train' or FLAGS.option == 'fine_tune' or FLAGS.option == 'evaluation' or FLAGS.option == 'optimization':
     	run_train_model(FLAGS)
     if FLAGS.option == 'validation':
     	run_grid_search(FLAGS)
